@@ -26,19 +26,25 @@ class LearningPlan extends StatelessWidget {
 }
 
 class LearningSteps extends StatefulWidget {
-  // test
-  final steps = [
-    LearningStep("Step 1", "Content of step 1"),
-    LearningStep("Step 2", "Content of step 2"),
-    LearningStep("Step 3", "Content of step 3")
-  ];
-
   @override
   State<StatefulWidget> createState() => _LearningStepsState();
 }
 
 class _LearningStepsState extends State<LearningSteps> {
   int? _currentStep;
+
+  List<LearningStep> steps = [];
+
+  @override
+  void initState() {
+    super.initState();
+
+    steps = [
+      LearningStep("Step 1", "Content of step 1"),
+      LearningStep("Step 2", "Content of step 2"),
+      LearningStep("Step 3", "Content of step 3")
+    ];
+  }
 
   void stepTapped(int stepNumber) {
     setState(() {
@@ -49,12 +55,20 @@ class _LearningStepsState extends State<LearningSteps> {
     });
   }
 
+  void stepRemove(int stepNumber) {
+    setState(() {
+      _currentStep = null;
+      if (steps.length > stepNumber) steps.removeAt(stepNumber);
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     return custom_stepper.CustomStepper(
       currentStep: _currentStep,
       onStepTapped: stepTapped,
-      steps: widget.steps.map((e) => e.getStep()).toList(),
+      onStepRemove: stepRemove,
+      steps: steps.map((e) => e.getStep()).toList(),
     );
   }
 }

@@ -5,6 +5,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
 
+// ignore: todo
 // TODO(dragostis): Missing functionality:
 //   * mobile horizontal mode with adding/removing steps
 //   * alternative labeling
@@ -67,9 +68,7 @@ class Step {
     required this.content,
     this.state = StepState.indexed,
     this.isActive = false,
-  })  : assert(title != null),
-        assert(content != null),
-        assert(state != null);
+  });
 
   /// The title of the step that typically describes it.
   final Widget title;
@@ -173,9 +172,9 @@ class CustomStepper extends StatefulWidget {
     this.onStepTapped,
     this.onStepContinue,
     this.onStepCancel,
+    this.onStepRemove,
     this.controlsBuilder,
-  })  : assert(steps != null),
-        super(key: key);
+  }) : super(key: key);
 
   /// The steps of the stepper whose titles, subtitles, icons always get shown.
   ///
@@ -207,6 +206,12 @@ class CustomStepper extends StatefulWidget {
   ///
   /// If null, the 'cancel' button will be disabled.
   final VoidCallback? onStepCancel;
+
+  /// !ADDED!
+  ///
+  /// The callback called when the remove state icon button is tapped.
+  /// If null the button won't be visible.
+  final ValueSetter<int>? onStepRemove;
 
   /// The callback for creating custom controls.
   ///
@@ -280,14 +285,16 @@ class _StepperState extends State<CustomStepper> with TickerProviderStateMixin {
       _oldStates[i] = widget.steps[i].state;
   }
 
-  @override
-  void didUpdateWidget(CustomStepper oldWidget) {
-    super.didUpdateWidget(oldWidget);
-    assert(widget.steps.length == oldWidget.steps.length);
+  // Commented out to make removing steps work
+  //
+  // @override
+  // void didUpdateWidget(CustomStepper oldWidget) {
+  //   super.didUpdateWidget(oldWidget);
+  //   assert(widget.steps.length == oldWidget.steps.length);
 
-    for (int i = 0; i < oldWidget.steps.length; i += 1)
-      _oldStates[i] = oldWidget.steps[i].state;
-  }
+  //   for (int i = 0; i < oldWidget.steps.length; i += 1)
+  //     _oldStates[i] = oldWidget.steps[i].state;
+  // }
 
   bool _isFirst(int index) {
     return index == 0;
@@ -317,7 +324,6 @@ class _StepperState extends State<CustomStepper> with TickerProviderStateMixin {
     final StepState state =
         oldState ? _oldStates[index]! : widget.steps[index].state;
     final bool isDarkActive = _isDark() && widget.steps[index].isActive;
-    assert(state != null);
     switch (state) {
       case StepState.indexed:
       case StepState.disabled:
@@ -450,49 +456,49 @@ class _StepperState extends State<CustomStepper> with TickerProviderStateMixin {
     const EdgeInsets buttonPadding = EdgeInsets.symmetric(horizontal: 16.0);
 
     return Container(
-      margin: const EdgeInsets.only(top: 16.0),
+      //margin: const EdgeInsets.only(top: 16.0),
       child: ConstrainedBox(
-        constraints: const BoxConstraints.tightFor(height: 48.0),
+        constraints: const BoxConstraints.tightFor(height: 0.0), // was 48
         child: Row(
           // The Material spec no longer includes a Stepper widget. The continue
           // and cancel button styles have been configured to match the original
           // version of this widget.
           children: <Widget>[
-            TextButton(
-              onPressed: widget.onStepContinue,
-              style: ButtonStyle(
-                foregroundColor: MaterialStateProperty.resolveWith<Color?>(
-                    (Set<MaterialState> states) {
-                  return states.contains(MaterialState.disabled)
-                      ? null
-                      : (_isDark()
-                          ? colorScheme.onSurface
-                          : colorScheme.onPrimary);
-                }),
-                backgroundColor: MaterialStateProperty.resolveWith<Color?>(
-                    (Set<MaterialState> states) {
-                  return _isDark() || states.contains(MaterialState.disabled)
-                      ? null
-                      : colorScheme.primary;
-                }),
-                padding: MaterialStateProperty.all<EdgeInsetsGeometry>(
-                    buttonPadding),
-                shape: MaterialStateProperty.all<OutlinedBorder>(buttonShape),
-              ),
-              child: Text(localizations.continueButtonLabel),
-            ),
-            Container(
-              margin: const EdgeInsetsDirectional.only(start: 8.0),
-              child: TextButton(
-                onPressed: widget.onStepCancel,
-                style: TextButton.styleFrom(
-                  primary: cancelColor,
-                  padding: buttonPadding,
-                  shape: buttonShape,
-                ),
-                child: Text(localizations.cancelButtonLabel),
-              ),
-            ),
+            // TextButton(
+            //   onPressed: widget.onStepContinue,
+            //   style: ButtonStyle(
+            //     foregroundColor: MaterialStateProperty.resolveWith<Color?>(
+            //         (Set<MaterialState> states) {
+            //       return states.contains(MaterialState.disabled)
+            //           ? null
+            //           : (_isDark()
+            //               ? colorScheme.onSurface
+            //               : colorScheme.onPrimary);
+            //     }),
+            //     backgroundColor: MaterialStateProperty.resolveWith<Color?>(
+            //         (Set<MaterialState> states) {
+            //       return _isDark() || states.contains(MaterialState.disabled)
+            //           ? null
+            //           : colorScheme.primary;
+            //     }),
+            //     padding: MaterialStateProperty.all<EdgeInsetsGeometry>(
+            //         buttonPadding),
+            //     shape: MaterialStateProperty.all<OutlinedBorder>(buttonShape),
+            //   ),
+            //   child: Text(localizations.continueButtonLabel),
+            // ),
+            // Container(
+            //   margin: const EdgeInsetsDirectional.only(start: 8.0),
+            //   child: TextButton(
+            //     onPressed: widget.onStepCancel,
+            //     style: TextButton.styleFrom(
+            //       primary: cancelColor,
+            //       padding: buttonPadding,
+            //       shape: buttonShape,
+            //     ),
+            //     child: Text(localizations.cancelButtonLabel),
+            //   ),
+            // ),
           ],
         ),
       ),
@@ -503,7 +509,6 @@ class _StepperState extends State<CustomStepper> with TickerProviderStateMixin {
     final ThemeData themeData = Theme.of(context);
     final TextTheme textTheme = themeData.textTheme;
 
-    assert(widget.steps[index].state != null);
     switch (widget.steps[index].state) {
       case StepState.indexed:
       case StepState.editing:
@@ -522,7 +527,6 @@ class _StepperState extends State<CustomStepper> with TickerProviderStateMixin {
     final ThemeData themeData = Theme.of(context);
     final TextTheme textTheme = themeData.textTheme;
 
-    assert(widget.steps[index].state != null);
     switch (widget.steps[index].state) {
       case StepState.indexed:
       case StepState.editing:
@@ -581,6 +585,12 @@ class _StepperState extends State<CustomStepper> with TickerProviderStateMixin {
             margin: const EdgeInsetsDirectional.only(start: 12.0),
             child: _buildHeaderText(index),
           )),
+          if (_isCurrent(index) && widget.onStepRemove != null)
+            IconButton(
+                icon: Icon(Icons.close, color: Colors.red[600]),
+                onPressed: () {
+                  widget.onStepRemove!(index);
+                })
         ],
       ),
     );
