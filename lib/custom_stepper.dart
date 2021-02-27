@@ -27,7 +27,7 @@ const Color _kCircleActiveLight = Colors.white;
 const Color _kCircleActiveDark = Colors.black87;
 const Color _kDisabledLight = Colors.black38;
 const Color _kDisabledDark = Colors.white38;
-const double _kStepSize = 32.0;
+const double _kStepSize = 42.0;
 const double _kTriangleHeight =
     _kStepSize * 0.866025; // Triangle height. sqrt(3.0) / 2.0
 
@@ -265,6 +265,23 @@ class _StepperState extends State<CustomStepper> with TickerProviderStateMixin {
     return Draggable(
       data: index,
       axis: Axis.vertical,
+      childWhenDragging: Container(
+        margin: const EdgeInsets.symmetric(vertical: 8.0),
+        width: _kStepSize,
+        height: _kStepSize,
+        child: AnimatedContainer(
+          curve: Curves.fastOutSlowIn,
+          duration: kThemeAnimationDuration,
+          decoration: BoxDecoration(
+            color: _circleColor(index).withAlpha(80),
+            shape: BoxShape.circle,
+          ),
+          child: Center(
+            child: _buildCircleChild(index,
+                oldState && widget.steps[index].state == StepState.error),
+          ),
+        ),
+      ),
       feedback: Container(
         margin: const EdgeInsets.symmetric(vertical: 8.0),
         width: _kStepSize,
@@ -285,7 +302,7 @@ class _StepperState extends State<CustomStepper> with TickerProviderStateMixin {
             curve: Curves.fastOutSlowIn,
             duration: kThemeAnimationDuration,
             decoration: BoxDecoration(
-              color: _circleColor(index),
+              color: hoveringOver == index ? Colors.green : _circleColor(index),
               shape: BoxShape.circle,
             ),
             child: Center(
@@ -302,12 +319,25 @@ class _StepperState extends State<CustomStepper> with TickerProviderStateMixin {
             builder: (context, List<int?> candidateData, rejectedData) {
               return Container();
             },
-            onWillAccept: (data) => true,
+            onWillAccept: (data) {
+              print("Over");
+              setState(() {
+                hoveringOver = index;
+              });
+              return true;
+            },
+            onLeave: (data) {
+              print("Left");
+              setState(() {
+                hoveringOver = null;
+              });
+            },
             onAccept: (data) {
               var oldIndex = int.tryParse(data.toString());
 
               if (widget.onStepDropAccepted != null && oldIndex != null) {
                 widget.onStepDropAccepted!(oldIndex, index);
+                hoveringOver = null;
               }
             },
           ),
@@ -315,6 +345,8 @@ class _StepperState extends State<CustomStepper> with TickerProviderStateMixin {
       ]),
     );
   }
+
+  int? hoveringOver;
 
   Widget _buildTriangle(int index, bool oldState) {
     return Container(
@@ -535,8 +567,7 @@ class _StepperState extends State<CustomStepper> with TickerProviderStateMixin {
                   PopupMenuItem<ValueSetter<int>>(
                     child: Text("Rename"),
                     value: widget.onStepRename,
-                  ),
-                PopupMenuItem(child: Text("Change Step Color"))
+                  )
               ],
               onSelected: (ValueSetter<int> callback) {
                 callback(index);
