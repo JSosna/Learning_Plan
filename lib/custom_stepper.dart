@@ -20,16 +20,14 @@ enum StepState {
 }
 
 const TextStyle _kStepStyle = TextStyle(
-  fontSize: 12.0,
-  color: Colors.white,
-);
+    fontSize: 12.0, color: Colors.white, decoration: TextDecoration.none);
 const Color _kErrorLight = Colors.red;
 final Color _kErrorDark = Colors.red.shade400;
 const Color _kCircleActiveLight = Colors.white;
 const Color _kCircleActiveDark = Colors.black87;
 const Color _kDisabledLight = Colors.black38;
 const Color _kDisabledDark = Colors.white38;
-const double _kStepSize = 24.0;
+const double _kStepSize = 32.0;
 const double _kTriangleHeight =
     _kStepSize * 0.866025; // Triangle height. sqrt(3.0) / 2.0
 
@@ -96,6 +94,7 @@ class CustomStepper extends StatefulWidget {
     this.onStepMoveDown,
     this.onStepRename,
     this.onStepDelete,
+    this.onStepDropAccepted,
     this.controlsBuilder,
   }) : super(key: key);
 
@@ -153,6 +152,11 @@ class CustomStepper extends StatefulWidget {
   /// The callback called when the remove step icon button is tapped.
   /// If null the button won't be visible.
   final ValueSetter<int>? onStepDelete;
+
+  /// !NEW!
+  ///
+  /// The callback called when user drags and drops step onto another one
+  final void Function(int, int)? onStepDropAccepted;
 
   /// The callback for creating custom controls.
   ///
@@ -258,22 +262,57 @@ class _StepperState extends State<CustomStepper> with TickerProviderStateMixin {
   }
 
   Widget _buildCircle(int index, bool oldState) {
-    return Container(
-      margin: const EdgeInsets.symmetric(vertical: 8.0),
-      width: _kStepSize,
-      height: _kStepSize,
-      child: AnimatedContainer(
-        curve: Curves.fastOutSlowIn,
-        duration: kThemeAnimationDuration,
-        decoration: BoxDecoration(
-          color: _circleColor(index),
-          shape: BoxShape.circle,
-        ),
+    return Draggable(
+      data: index,
+      axis: Axis.vertical,
+      feedback: Container(
+        margin: const EdgeInsets.symmetric(vertical: 8.0),
+        width: _kStepSize,
+        height: _kStepSize,
+        decoration:
+            BoxDecoration(color: _circleColor(index), shape: BoxShape.circle),
         child: Center(
           child: _buildCircleChild(
               index, oldState && widget.steps[index].state == StepState.error),
         ),
       ),
+      child: Stack(children: [
+        Container(
+          margin: const EdgeInsets.symmetric(vertical: 8.0),
+          width: _kStepSize,
+          height: _kStepSize,
+          child: AnimatedContainer(
+            curve: Curves.fastOutSlowIn,
+            duration: kThemeAnimationDuration,
+            decoration: BoxDecoration(
+              color: _circleColor(index),
+              shape: BoxShape.circle,
+            ),
+            child: Center(
+              child: _buildCircleChild(index,
+                  oldState && widget.steps[index].state == StepState.error),
+            ),
+          ),
+        ),
+        Container(
+          margin: const EdgeInsets.symmetric(vertical: 8.0),
+          width: _kStepSize,
+          height: _kStepSize,
+          child: DragTarget(
+            builder: (context, List<int?> candidateData, rejectedData) {
+              return Container();
+            },
+            onWillAccept: (data) => true,
+            onAccept: (data) {
+              var oldIndex = int.tryParse(data.toString());
+
+              if (widget.onStepDropAccepted != null && oldIndex != null) {
+                widget.onStepDropAccepted!(oldIndex, index);
+              }
+            },
+          ),
+        ),
+      ]),
     );
   }
 
@@ -522,7 +561,7 @@ class _StepperState extends State<CustomStepper> with TickerProviderStateMixin {
           top: 0.0,
           bottom: 0.0,
           child: SizedBox(
-            width: 24.0,
+            width: _kStepSize,
             child: Center(
               child: SizedBox(
                 width: _isLast(index) ? 0.0 : 1.0,

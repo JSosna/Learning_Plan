@@ -131,6 +131,19 @@ class _LearningStepsState extends State<LearningSteps> {
     });
   }
 
+  void swapSteps(int oldStep, int newStep) {
+    if (oldStep >= steps.length || newStep >= steps.length) return;
+    if (oldStep == newStep) return;
+
+    var tmp = steps[oldStep];
+
+    setState(() {
+      steps[oldStep] = steps[newStep];
+      steps[newStep] = tmp;
+      _currentStep = null;
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     return custom_stepper.CustomStepper(
@@ -139,6 +152,7 @@ class _LearningStepsState extends State<LearningSteps> {
       onStepDelete: handleStepDelete,
       onStepMoveUp: stepMoveUp,
       onStepMoveDown: stepMoveDown,
+      onStepDropAccepted: swapSteps,
       steps: steps.map((e) => e.getStep()).toList(),
     );
   }
