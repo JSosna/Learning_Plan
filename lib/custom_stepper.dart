@@ -172,7 +172,7 @@ class CustomStepper extends StatefulWidget {
     this.onStepTapped,
     this.onStepContinue,
     this.onStepCancel,
-    this.onStepRemove,
+    this.onStepDelete,
     this.controlsBuilder,
   }) : super(key: key);
 
@@ -211,7 +211,7 @@ class CustomStepper extends StatefulWidget {
   ///
   /// The callback called when the remove state icon button is tapped.
   /// If null the button won't be visible.
-  final ValueSetter<int>? onStepRemove;
+  final ValueSetter<int>? onStepDelete;
 
   /// The callback for creating custom controls.
   ///
@@ -585,11 +585,11 @@ class _StepperState extends State<CustomStepper> with TickerProviderStateMixin {
             margin: const EdgeInsetsDirectional.only(start: 12.0),
             child: _buildHeaderText(index),
           )),
-          if (_isCurrent(index) && widget.onStepRemove != null)
+          if (_isCurrent(index) && widget.onStepDelete != null)
             IconButton(
                 icon: Icon(Icons.close, color: Colors.red[600]),
                 onPressed: () {
-                  widget.onStepRemove!(index);
+                  widget.onStepDelete!(index);
                 })
         ],
       ),

@@ -55,11 +55,54 @@ class _LearningStepsState extends State<LearningSteps> {
     });
   }
 
-  void stepRemove(int stepNumber) {
+  void handleStepDelete(int stepNumber) {
+    setState(() {
+      _showDeleteStepDialog(stepNumber);
+    });
+  }
+
+  void deleteStep(int stepNumber) {
     setState(() {
       _currentStep = null;
       if (steps.length > stepNumber) steps.removeAt(stepNumber);
     });
+  }
+
+  Future<void> _showDeleteStepDialog(int stepNumber) async {
+    return showDialog<void>(
+      context: context,
+      barrierDismissible: false, // user must tap button!
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Text(steps[stepNumber].title),
+          content: SingleChildScrollView(
+            child: ListBody(
+              children: <Widget>[
+                Text('Do you really want to delete this step?'),
+              ],
+            ),
+          ),
+          actions: <Widget>[
+            TextButton(
+              child: Text('Cancel'),
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+            ),
+            TextButton(
+              child: Text(
+                'Delete',
+                style: TextStyle(color: Colors.redAccent),
+              ),
+              onPressed: () {
+                deleteStep(stepNumber);
+                Navigator.of(context).pop();
+              },
+            ),
+          ],
+        );
+      },
+    );
   }
 
   @override
@@ -67,7 +110,7 @@ class _LearningStepsState extends State<LearningSteps> {
     return custom_stepper.CustomStepper(
       currentStep: _currentStep,
       onStepTapped: stepTapped,
-      onStepRemove: stepRemove,
+      onStepDelete: handleStepDelete,
       steps: steps.map((e) => e.getStep()).toList(),
     );
   }
