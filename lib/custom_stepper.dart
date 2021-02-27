@@ -1,22 +1,6 @@
-// Copyright 2014 The Flutter Authors. All rights reserved.
-// Use of this source code is governed by a BSD-style license that can be
-// found in the LICENSE file.
-
 import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
 
-// ignore: todo
-// TODO(dragostis): Missing functionality:
-//   * mobile horizontal mode with adding/removing steps
-//   * alternative labeling
-//   * stepper feedback in the case of high-latency interactions
-
-/// The state of a [Step] which is used to control the style of the circle and
-/// text.
-///
-/// See also:
-///
-///  * [Step]
 enum StepState {
   /// A step that displays its index in its circle.
   indexed,
@@ -92,70 +76,6 @@ class Step {
   final bool isActive;
 }
 
-/// A material stepper widget that displays progress through a sequence of
-/// steps. Steppers are particularly useful in the case of forms where one step
-/// requires the completion of another one, or where multiple steps need to be
-/// completed in order to submit the whole form.
-///
-/// The widget is a flexible wrapper. A parent class should pass [currentStep]
-/// to this widget based on some logic triggered by the three callbacks that it
-/// provides.
-///
-/// {@tool sample --template=stateful_widget_scaffold_center}
-///
-/// ```dart
-/// int _index = 0;
-/// Widget build(BuildContext context) {
-///   return Container(
-///     height: 300,
-///     width: 300,
-///     child: Stepper(
-///       currentStep: _index,
-///       onStepCancel: () {
-///         if (_index <= 0) {
-///          return;
-///         }
-///         setState(() {
-///           _index--;
-///         });
-///       },
-///       onStepContinue: () {
-///         if (_index >= 1) {
-///          return;
-///         }
-///         setState(() {
-///           _index++;
-///         });
-///       },
-///       onStepTapped: (index) {
-///         setState(() {
-///           _index = index;
-///         });
-///       },
-///       steps: [
-///         Step(
-///           title: Text("Step 1 title"),
-///           content: Container(
-///             alignment: Alignment.centerLeft,
-///             child: Text("Content for Step 1")
-///           ),
-///         ),
-///         Step(
-///           title: Text("Step 2 title"),
-///           content: Text("Content for Step 2"),
-///         ),
-///       ],
-///     ),
-///   );
-/// }
-/// ```
-///
-/// {@end-tool}
-///
-/// See also:
-///
-///  * [Step]
-///  * <https://material.io/archive/guidelines/components/steppers.html>
 class CustomStepper extends StatefulWidget {
   /// Creates a stepper from a list of steps.
   ///
@@ -172,6 +92,9 @@ class CustomStepper extends StatefulWidget {
     this.onStepTapped,
     this.onStepContinue,
     this.onStepCancel,
+    this.onStepMoveUp,
+    this.onStepMoveDown,
+    this.onStepRename,
     this.onStepDelete,
     this.controlsBuilder,
   }) : super(key: key);
@@ -207,62 +130,33 @@ class CustomStepper extends StatefulWidget {
   /// If null, the 'cancel' button will be disabled.
   final VoidCallback? onStepCancel;
 
-  /// !ADDED!
+  /// !NEW!
   ///
-  /// The callback called when the remove state icon button is tapped.
+  /// The callback called when the step menu item move up is tapped.
+  /// If null the menu item won't be visible.
+  final ValueSetter<int>? onStepMoveUp;
+
+  /// !NEW!
+  ///
+  /// The callback called when the step menu item move up is tapped.
+  /// If null the menu item won't be visible.
+  final ValueSetter<int>? onStepMoveDown;
+
+  /// !NEW!
+  ///
+  /// The callback called when the step menu item rename is tapped.
+  /// If null the menu item won't be visible.
+  final ValueSetter<int>? onStepRename;
+
+  /// !NEW!
+  ///
+  /// The callback called when the remove step icon button is tapped.
   /// If null the button won't be visible.
   final ValueSetter<int>? onStepDelete;
 
   /// The callback for creating custom controls.
   ///
   /// If null, the default controls from the current theme will be used.
-  ///
-  /// This callback which takes in a context and two functions: [onStepContinue]
-  /// and [onStepCancel]. These can be used to control the stepper.
-  /// For example, keeping track of the [currentStep] within the callback can
-  /// change the text of the continue or cancel button depending on which step users are at.
-  ///
-  /// {@tool dartpad --template=stateless_widget_scaffold}
-  /// Creates a stepper control with custom buttons.
-  ///
-  /// ```dart
-  /// Widget build(BuildContext context) {
-  ///   return Stepper(
-  ///     controlsBuilder:
-  ///       (BuildContext context, { VoidCallback? onStepContinue, VoidCallback? onStepCancel }) {
-  ///          return Row(
-  ///            children: <Widget>[
-  ///              TextButton(
-  ///                onPressed: onStepContinue,
-  ///                child: const Text('NEXT'),
-  ///              ),
-  ///              TextButton(
-  ///                onPressed: onStepCancel,
-  ///                child: const Text('CANCEL'),
-  ///              ),
-  ///            ],
-  ///          );
-  ///       },
-  ///     steps: const <Step>[
-  ///       Step(
-  ///         title: Text('A'),
-  ///         content: SizedBox(
-  ///           width: 100.0,
-  ///           height: 100.0,
-  ///         ),
-  ///       ),
-  ///       Step(
-  ///         title: Text('B'),
-  ///         content: SizedBox(
-  ///           width: 100.0,
-  ///           height: 100.0,
-  ///         ),
-  ///       ),
-  ///     ],
-  ///   );
-  /// }
-  /// ```
-  /// {@end-tool}
   final ControlsWidgetBuilder? controlsBuilder;
 
   @override
@@ -585,6 +479,30 @@ class _StepperState extends State<CustomStepper> with TickerProviderStateMixin {
             margin: const EdgeInsetsDirectional.only(start: 12.0),
             child: _buildHeaderText(index),
           )),
+          if (_isCurrent(index))
+            PopupMenuButton<ValueSetter<int>>(
+              itemBuilder: (BuildContext context) => [
+                if (widget.onStepMoveUp != null && !_isFirst(index))
+                  PopupMenuItem<ValueSetter<int>>(
+                    child: Text("Move Up"),
+                    value: widget.onStepMoveUp,
+                  ),
+                if (widget.onStepMoveDown != null && !_isLast(index))
+                  PopupMenuItem<ValueSetter<int>>(
+                    child: Text("Move Down"),
+                    value: widget.onStepMoveDown,
+                  ),
+                if (widget.onStepRename != null)
+                  PopupMenuItem<ValueSetter<int>>(
+                    child: Text("Rename"),
+                    value: widget.onStepRename,
+                  ),
+                PopupMenuItem(child: Text("Change Step Color"))
+              ],
+              onSelected: (ValueSetter<int> callback) {
+                callback(index);
+              },
+            ),
           if (_isCurrent(index) && widget.onStepDelete != null)
             IconButton(
                 icon: Icon(Icons.close, color: Colors.red[600]),

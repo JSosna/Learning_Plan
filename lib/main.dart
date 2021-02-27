@@ -40,9 +40,9 @@ class _LearningStepsState extends State<LearningSteps> {
     super.initState();
 
     steps = [
-      LearningStep("Step 1", "Content of step 1"),
-      LearningStep("Step 2", "Content of step 2"),
-      LearningStep("Step 3", "Content of step 3")
+      LearningStep("Step 1", Text("Content of step 1")),
+      LearningStep("Step 2", Text("Content of step 2")),
+      LearningStep("Step 3", Text("Content of step 3"))
     ];
   }
 
@@ -105,12 +105,40 @@ class _LearningStepsState extends State<LearningSteps> {
     );
   }
 
+  void stepMoveUp(int stepNumber) {
+    if (stepNumber <= 0) return;
+    if (stepNumber >= steps.length) return;
+
+    var tmp = steps[stepNumber];
+
+    setState(() {
+      steps[stepNumber] = steps[stepNumber - 1];
+      steps[stepNumber - 1] = tmp;
+      _currentStep = null;
+    });
+  }
+
+  void stepMoveDown(int stepNumber) {
+    if (stepNumber < 0) return;
+    if (stepNumber + 1 >= steps.length) return;
+
+    var tmp = steps[stepNumber];
+
+    setState(() {
+      steps[stepNumber] = steps[stepNumber + 1];
+      steps[stepNumber + 1] = tmp;
+      _currentStep = null;
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     return custom_stepper.CustomStepper(
       currentStep: _currentStep,
       onStepTapped: stepTapped,
       onStepDelete: handleStepDelete,
+      onStepMoveUp: stepMoveUp,
+      onStepMoveDown: stepMoveDown,
       steps: steps.map((e) => e.getStep()).toList(),
     );
   }
