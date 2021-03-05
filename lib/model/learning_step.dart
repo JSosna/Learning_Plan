@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'custom_stepper.dart' as custom_stepper;
+import '../custom_stepper.dart' as custom_stepper;
 
 class LearningStep {
   String title;

@@ -27,7 +27,8 @@ const Color _kCircleActiveLight = Colors.white;
 const Color _kCircleActiveDark = Colors.black87;
 const Color _kDisabledLight = Colors.black38;
 const Color _kDisabledDark = Colors.white38;
-const double _kStepSize = 42.0;
+const double _kStepSize = 50.0;
+const double _kStepCircleContentSize = 20.0;
 const double _kTriangleHeight =
     _kStepSize * 0.866025; // Triangle height. sqrt(3.0) / 2.0
 
@@ -228,20 +229,20 @@ class _StepperState extends State<CustomStepper> with TickerProviderStateMixin {
         return Text(
           '${index + 1}',
           style: isDarkActive
-              ? _kStepStyle.copyWith(color: Colors.black87)
-              : _kStepStyle,
+              ? _kStepStyle.copyWith(color: Colors.black87, fontSize: _kStepCircleContentSize)
+              : _kStepStyle.copyWith(fontSize: _kStepCircleContentSize),
         );
       case StepState.editing:
         return Icon(
           Icons.edit,
           color: isDarkActive ? _kCircleActiveDark : _kCircleActiveLight,
-          size: 18.0,
+          size: _kStepCircleContentSize,
         );
       case StepState.complete:
         return Icon(
           Icons.check,
           color: isDarkActive ? _kCircleActiveDark : _kCircleActiveLight,
-          size: 18.0,
+          size: _kStepCircleContentSize,
         );
       case StepState.error:
         return const Text('!', style: _kStepStyle);
@@ -320,14 +321,12 @@ class _StepperState extends State<CustomStepper> with TickerProviderStateMixin {
               return Container();
             },
             onWillAccept: (data) {
-              print("Over");
               setState(() {
                 hoveringOver = index;
               });
               return true;
             },
             onLeave: (data) {
-              print("Left");
               setState(() {
                 hoveringOver = null;
               });
